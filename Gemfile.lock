@@ -27,5 +27,8 @@ DEPENDENCIES
   rubocop (= 0.48.1)!
   tty-screen!
 
+RUBY VERSION
+   ruby 2.4.5p335
+
 BUNDLED WITH
-   2.1.2
+   2.1.4
