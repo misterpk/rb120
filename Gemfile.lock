@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.0)
+    awesome_print (1.8.0)
     byebug (11.0.1)
     parser (2.6.5.0)
       ast (~> 2.4.0)
@@ -23,6 +24,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  awesome_print!
   byebug!
   rubocop (= 0.48.1)!
   tty-screen!
