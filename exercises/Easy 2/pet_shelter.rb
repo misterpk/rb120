@@ -29,16 +29,25 @@ end
 class Shelter
   def initialize
     @adoptions = {}
+    @available_pets = []
   end
 
   def adopt(owner, pet)
     owner.pets.concat([pet])
+    @available_pets.delete(pet)
     if @adoptions.key?(owner.name)
       @adoptions[owner.name].concat([pet])
     else
       @adoptions[owner.name] = [pet]
     end
+  end
 
+  def add_pet(pet)
+    if pet.class == Array
+      @available_pets += pet
+    else
+      @available_pets << pet
+    end
   end
 
   def print_adoptions
@@ -50,6 +59,17 @@ class Shelter
       puts
     end
   end
+
+  def print_available_pets
+    if @available_pets.empty?
+      return puts "The Animal Shelter has no available pets"
+    end
+    puts "The Animal Shelter has the following unadopted pets:"
+    @available_pets.each do |pet|
+      puts "a #{pet.type} named #{pet.name}"
+    end
+    puts
+  end
 end
 
 butterscotch = Pet.new('cat', 'Butterscotch')
@@ -59,11 +79,15 @@ kennedy      = Pet.new('dog', 'Kennedy')
 sweetie      = Pet.new('parakeet', 'Sweetie Pie')
 molly        = Pet.new('dog', 'Molly')
 chester      = Pet.new('fish', 'Chester')
+mikey        = Pet.new('dog', 'Mikey')
 
 phanson = Owner.new('P Hanson')
 bholmes = Owner.new('B Holmes')
 
 shelter = Shelter.new
+shelter.add_pet([butterscotch, pudding, darwin, kennedy,
+                 sweetie, molly, chester, mikey])
+
 shelter.adopt(phanson, butterscotch)
 shelter.adopt(phanson, pudding)
 shelter.adopt(phanson, darwin)
@@ -71,6 +95,9 @@ shelter.adopt(bholmes, kennedy)
 shelter.adopt(bholmes, sweetie)
 shelter.adopt(bholmes, molly)
 shelter.adopt(bholmes, chester)
+
 shelter.print_adoptions
+shelter.print_available_pets
+
 puts "#{phanson.name} has #{phanson.number_of_pets} adopted pets."
 puts "#{bholmes.name} has #{bholmes.number_of_pets} adopted pets."
