@@ -1,4 +1,5 @@
 require 'byebug'
+require 'awesome_print'
 
 class Pet
   attr_reader :type, :name
@@ -17,8 +18,8 @@ class Owner
     @pets = []
   end
 
-  def pets=(pet)
-    @pets.concat([pet])
+  def adopt_pet(pet)
+    @pets << pet
   end
 
   def number_of_pets
@@ -27,14 +28,16 @@ class Owner
 end
 
 class Shelter
+  attr_reader :adoptions
+
   def initialize
     @adoptions = {}
     @available_pets = []
   end
 
   def adopt(owner, pet)
-    owner.pets.concat([pet])
-    @available_pets.delete(pet)
+    owner.adopt_pet(pet)
+    adopt_out_pet(pet)
     if @adoptions.key?(owner.name)
       @adoptions[owner.name].concat([pet])
     else
@@ -48,6 +51,10 @@ class Shelter
     else
       @available_pets << pet
     end
+  end
+
+  def adopt_out_pet(pet)
+    @available_pets.delete(pet)
   end
 
   def print_adoptions
