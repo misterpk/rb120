@@ -10,6 +10,7 @@ class Cat
   end
 end
 
+# rubocop:disable Lint/UselessAssignment
 kitty1 = Cat.new
 kitty2 = Cat.new
-
+# rubocop:enable Lint/UselessAssignment

@@ -39,27 +39,27 @@ kitty = Cat.new
 dave = Dog.new
 bud = Bulldog.new
 
-puts pete.run                # => "running!"
+puts pete.run # => "running!"
 
 begin
-  puts pete.speak              # => NoMethodError
+  puts pete.speak # => NoMethodError
 rescue NoMethodError
   puts "NoMethodError"
 end
 
-puts kitty.run               # => "running!"
-puts kitty.speak             # => "meow!"
+puts kitty.run # => "running!"
+puts kitty.speak # => "meow!"
 
 begin
-  puts kitty.fetch             # => NoMethodError
+  puts kitty.fetch # => NoMethodError
 rescue NoMethodError
   puts "NoMethodError"
 end
 
-puts dave.speak              # => "bark!"
+puts dave.speak # => "bark!"
 
-puts bud.run                 # => "running!"
-puts bud.swim                # => "can't swim!"
+puts bud.run # => "running!"
+puts bud.swim # => "can't swim!"
 
 p Pet.ancestors
 p Cat.ancestors

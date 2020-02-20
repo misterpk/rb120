@@ -18,4 +18,4 @@ end
 car = Car.new
 car.mileage = 5000
 car.increment_mileage(678)
-car.print_mileage  # should print 5678
+car.print_mileage # should print 5678
