@@ -1,58 +1,75 @@
+require 'byebug'
+
 class Move
   VALUES = %w(rock paper scissors spock lizard)
 
-  def initialize(value)
-    @value = value
-  end
-
-  def scissors?
-    @value == "scissors"
-  end
-
-  def rock?
-    @value == "rock"
-  end
-
-  def paper?
-    @value == "paper"
-  end
-
-  def spock?
-    @value == "spock"
-  end
-
-  def lizard?
-    @value == "lizard"
-  end
-
-  def >(other_move)
-    (scissors? && other_move.paper?) ||
-      (paper? && other_move.rock?) ||
-      (rock? && other_move.lizard?) ||
-      (lizard? && other_move.spock?) ||
-      (spock? && other_move.scissors?) ||
-      (scissors? && other_move.lizard?) ||
-      (lizard? && other_move.paper?) ||
-      (paper? && other_move.spock?) ||
-      (spock? && other_move.rock?) ||
-      (rock? && other_move.scissors?)
-  end
-
-  def <(other_move)
-    (scissors? && other_move.rock?) ||
-      (rock? && other_move.spock?) ||
-      (spock? && other_move.paper?) ||
-      (paper? && other_move.lizard?) ||
-      (lizard? && other_move.scissors?) ||
-      (scissors? && other_move.spock?) ||
-      (spock? && other_move.lizard?) ||
-      (lizard? && other_move.rock?) ||
-      (rock? && other_move.paper?) ||
-      (paper? && other_move.scissors?)
+  def self.create_move(move)
+    case move
+    when "rock"
+      Rock.new
+    when "paper"
+      Paper.new
+    when "scissors"
+      Scissors.new
+    when "spock"
+      Spock.new
+    when "lizard"
+      Lizard.new
+    end
   end
 
   def to_s
-    @value
+    self.class.to_s
+  end
+end
+
+class Rock < Move
+  def >(other_move)
+    other_move.instance_of?(Scissors) || other_move.instance_of?(Lizard)
+  end
+
+  def <(other_move)
+    other_move.instance_of?(Paper) || other_move.instance_of?(Spock)
+  end
+end
+
+class Paper < Move
+  def >(other_move)
+    other_move.instance_of?(Rock) || other_move.instance_of?(Spock)
+  end
+
+  def <(other_move)
+    other_move.instance_of?(Lizard) || other_move.instance_of?(Scissors)
+  end
+end
+
+class Scissors < Move
+  def >(other_move)
+    other_move.instance_of?(Paper) || other_move.instance_of?(Lizard)
+  end
+
+  def <(other_move)
+    other_move.instance_of?(Rock) || other_move.instance_of?(Spock)
+  end
+end
+
+class Spock < Move
+  def >(other_move)
+    other_move.instance_of?(Scissors) || other_move.instance_of?(Rock)
+  end
+
+  def <(other_move)
+    other_move.instance_of?(Paper) || other_move.instance_of?(Lizard)
+  end
+end
+
+class Lizard < Move
+  def >(other_move)
+    other_move.instance_of?(Spock) || other_move.instance_of?(Paper)
+  end
+
+  def <(other_move)
+    other_move.instance_of?(Scissors) || other_move.instance_of?(Rock)
   end
 end
 
@@ -74,18 +91,22 @@ class Human < Player
       break unless n.empty?
       puts "Sorry, must enter a value."
     end
+
     self.name = n
   end
 
   def choose
     choice = nil
+
     loop do
-      puts "Please choose #{Move::VALUES.join(', ')}:"
+      puts "Please choose #{Move::VALUES.join(', ')} or the first letter of " \
+        "the move:"
       choice = gets.chomp
       break if Move::VALUES.include?(choice)
       puts "Sorry, invalid choice"
     end
-    self.move = Move.new(choice)
+
+    self.move = Move.create_move(choice)
   end
 end
 
@@ -95,7 +116,7 @@ class Computer < Player
   end
 
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    self.move = Move.create_move(Move::VALUES.sample)
   end
 end
 
