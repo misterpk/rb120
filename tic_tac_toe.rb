@@ -1,5 +1,3 @@
-require 'byebug'
-
 class Board
   WINNING_LINES = [
     [1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
@@ -8,11 +6,6 @@ class Board
   ]
 
   def initialize
-    # We need some way to model the 3x3 grid. Maybe "squares"?
-    # what data structure should we use?
-    # - array/hash of Square objects?
-    # - array/hash of strings or integeers
-    # My thought - 3x3 multi-dimensional array
     @squares = {}
     reset
   end
@@ -64,26 +57,11 @@ class Board
     nil
   end
 
-  def find_at_risk_square(marker)
+  def find_square_to_mark(marker)
     WINNING_LINES.each do |line|
       squares = get_squares_from_line(line)
       markers = get_markers_from_squares(squares)
       if markers.count(marker) == 2
-        squares.each_with_index do |square, index|
-          if square.unmarked?
-            return line[index]
-          end
-        end
-      end
-    end
-    nil
-  end
-
-  def find_winning_square
-    WINNING_LINES.each do |line|
-      squares = get_squares_from_line(line)
-      markers = get_markers_from_squares(squares)
-      if markers.count(TTTGame::DEFAULT_COMPUTER_MARKER) == 2
         squares.each_with_index do |square, index|
           if square.unmarked?
             return line[index]
@@ -158,8 +136,8 @@ class TTTGame
   HUMAN = :human
   COMPUTER = :computer
   # Select PLAYER, COMPUTER or CHOOSE. CHOOSE asks the player who goes first
-  FIRST_TO_MOVE = COMPUTER
-  WINNING_SCORE = 2
+  FIRST_TO_MOVE = CHOOSE
+  WINNING_SCORE = 5
 
   def initialize
     @board = Board.new
@@ -172,14 +150,14 @@ class TTTGame
     display_welcome_message
     setup_player_data
 
-    gameplay
+    play_game
 
     display_goodbye_message
   end
 
   private
 
-  def gameplay
+  def play_game
     loop do
       clear_screen_and_display_board
 
@@ -200,7 +178,7 @@ class TTTGame
   def setup_player_data
     create_human_player
     create_computer_player
-    select_player_to_moves_first(FIRST_TO_MOVE)
+    select_player_to_move_first(FIRST_TO_MOVE)
   end
 
   def display_welcome_message
@@ -219,7 +197,7 @@ class TTTGame
     player_marker = nil
     loop do
       player_marker = gets.chomp.upcase
-      break if player_marker.size == 1 && player_marker.match(/[a-zA-Z]/)
+      break if player_marker.size == 1 && player_marker.match?(/[a-zA-Z]/)
       puts "Sorry, that's not a single letter."
     end
     player_marker
@@ -239,13 +217,13 @@ class TTTGame
                            name: enter_computer_name)
   end
 
-  def select_player_to_moves_first(type)
+  def select_player_to_move_first(type = CHOOSE)
     case type
-    when :human
+    when HUMAN
       human_has_first_move
-    when :computer
+    when COMPUTER
       computer_has_first_move
-    when :choose
+    when CHOOSE
       setup_player_to_move_first(enter_player_choice)
     end
   end
@@ -308,7 +286,7 @@ class TTTGame
   end
 
   def display_board
-    puts "You're a #{human.marker}. Computer is a #{computer.marker}"
+    puts "You're \"#{human.marker}\". Computer is a \"#{computer.marker}\""
     puts "You: #{human.score}. Computer: #{computer.score}"
     puts "The first player to #{WINNING_SCORE} wins the game!" unless game_won?
     puts ""
@@ -345,8 +323,8 @@ class TTTGame
   end
 
   def computer_moves
-    winning_square = board.find_winning_square
-    at_risk_squre = board.find_at_risk_square(human.marker)
+    winning_square = board.find_square_to_mark(computer.marker)
+    at_risk_squre = board.find_square_to_mark(human.marker)
 
     square = if winning_square
                winning_square
