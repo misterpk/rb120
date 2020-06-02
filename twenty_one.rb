@@ -1,111 +1,307 @@
 require "byebug"
 
-module Hand
-  def hit(card)
-    @cards.push(card)
+class Card
+  SUITS = ['H', 'D', 'S', 'C']
+  FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+  def initialize(suit, face)
+    @suit = suit
+    @face = face
   end
 
-  def stay; end
+  def to_s
+    "The #{face} of #{suit}"
+  end
+
+  def face
+    case @face
+    when 'J' then 'Jack'
+    when 'Q' then 'Queen'
+    when 'K' then 'King'
+    when 'A' then 'Ace'
+    else
+      @face
+    end
+  end
+
+  def suit
+    case @suit
+    when 'H' then 'Hearts'
+    when 'D' then 'Diamonds'
+    when 'S' then 'Spades'
+    when 'C' then 'Clubs'
+    end
+  end
+
+  def ace?
+    face == 'Ace'
+  end
+
+  def king?
+    face == 'King'
+  end
+
+  def queen?
+    face == 'Queen'
+  end
+
+  def jack?
+    face == 'Jack'
+  end
+end
+
+class Deck
+  attr_accessor :cards
+
+  def initialize
+    @cards = []
+    Card::SUITS.each do |suit|
+      Card::FACES.each do |face|
+        @cards << Card.new(suit, face)
+      end
+    end
+
+    scramble!
+  end
+
+  def scramble!
+    cards.shuffle!
+  end
+
+  def deal_one
+    cards.pop
+  end
+end
+
+module Hand
+  def show_hand
+    puts "---- #{name}'s Hand ----"
+    cards.each do |card|
+      puts "=> #{card}"
+    end
+    puts "=> Total: #{total}"
+    puts ""
+  end
+
+  def total
+    total = 0
+    total = calculate_total(cards, total)
+    handle_aces(cards, total)
+  end
+
+  def add_card(new_card)
+    cards << new_card
+  end
 
   def busted?
     total > 21
   end
 
-  def total
-    @cards.reduce(0) { |total, card| total + card.value }
+  private
+
+  def calculate_total(cards, total)
+    cards.each do |card|
+      total += if card.ace?
+                 11
+               elsif card.jack? || card.queen? || card.king?
+                 10
+               else
+                 card.face.to_i
+               end
+    end
+    total
+  end
+
+  def handle_aces(cards, total)
+    # correct for Aces
+    cards.select(&:ace?).count.times do
+      break if total <= 21
+      total -= 10
+    end
+    total
   end
 end
 
-class Player
+class Participant
   include Hand
 
-  attr_accessor :hand
-
-  def initialize
-    @hand = []
-  end
-end
-
-class Dealer < Player
-end
-
-class Deck
-  attr_reader :cards
-
-  SUITS = %w(clubs diamonds hearts spades)
-  CARDS = %w(2 3 4 5 6 7 8 9 10 Jack Queen King Ace)
-
+  attr_accessor :name, :cards
   def initialize
     @cards = []
-    SUITS.each do |suit|
-      CARDS.each do |card|
-        value = case card
-                when "Ace"
-                  11
-                when "Jack", "Queen", "King"
-                  10
-                else
-                  card.to_i
-                end
-        @cards << Card.new(suit: suit, name: card, value: value)
-      end
+    set_name
+  end
+end
+
+class Player < Participant
+  def set_name
+    name = ''
+    loop do
+      puts "What's your name?"
+      name = gets.chomp
+      break unless name.empty?
+      puts "Sorry, must enter a value."
     end
-    @cards.shuffle!
+    self.name = name
   end
 
-  def deal
-    @cards.pop
-  end
-end
-
-class Card
-  attr_reader :suit, :name, :value
-
-  def initialize(suit:, name:, value:)
-    @suit = suit
-    @name = name
-    @value = value
+  def show_flop
+    show_hand
   end
 end
 
-class Game
+class Dealer < Participant
+  ROBOTS = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5']
+
+  def set_name
+    self.name = ROBOTS.sample
+  end
+
+  def show_flop
+    puts "---- #{name}'s Hand ----"
+    puts cards.first.to_s
+    puts " ?? "
+    puts ""
+  end
+end
+
+class TwentyOne
+  attr_accessor :deck, :player, :dealer
+
   def initialize
+    @deck = Deck.new
     @player = Player.new
     @dealer = Dealer.new
-    @deck = Deck.new
   end
 
-  def start
-    deal_cards # done
-    show_initial_cards # done
-    player_turn # next
-    dealer_turn
-    show_result
+  def reset
+    self.deck = Deck.new
+    player.cards = []
+    dealer.cards = []
   end
 
   def deal_cards
     2.times do
-      @player.hand.push(@deck.deal)
-      @dealer.hand.push(@deck.deal)
+      player.add_card(deck.deal_one)
+      dealer.add_card(deck.deal_one)
     end
   end
 
-  def show_initial_cards
-    puts "Your cards: #{@player.hand[0].name} of #{@player.hand[0].suit}, " \
-         "#{@player.hand[1].name} of #{@player.hand[1].suit}"
-    puts "Total: #{@player.total}"
-    puts ""
-    puts "Dealer's cards: #{@dealer.hand[0].name} of " \
-         "#{@dealer.hand[0].suit}, unknown"
+  def show_flop
+    player.show_flop
+    dealer.show_flop
   end
 
   def player_turn
-    # next
+    puts "#{player.name}'s turn..."
+
+    loop do
+      puts "Would you like to (h)it or (s)tay?"
+      answer = nil
+      loop do
+        answer = gets.chomp.downcase
+        break if ['h', 's'].include?(answer)
+        puts "Sorry, must enter 'h' or 's'."
+      end
+
+      if answer == 's'
+        puts "#{player.name} stays!"
+        break
+      elsif player.busted?
+        break
+      else
+        # show update only for hit
+        player.add_card(deck.deal_one)
+        puts "#{player.name} hits!"
+        player.show_hand
+        break if player.busted?
+      end
+    end
   end
 
-  def dealer_turn; end
+  # rubocop:disable Metrics/MethodLength - code is easier to understand at
+  # this length
+  def dealer_turn
+    puts "#{dealer.name}'s turn..."
 
-  def show_result; end
+    loop do
+      break if dealer.busted?
+      if dealer.total >= 17
+        puts "#{dealer.name} stays!"
+        break
+      else
+        puts "#{dealer.name} hits!"
+        dealer.add_card(deck.deal_one)
+      end
+    end
+  end
+  # rubocop:enable Metrics/MethodLength
+
+  def show_busted
+    if player.busted?
+      puts "It looks like #{player.name} busted! #{dealer.name} wins!"
+    elsif dealer.busted?
+      puts "It looks like #{dealer.name} busted! #{player.name} wins!"
+    end
+  end
+
+  def show_cards
+    player.show_hand
+    dealer.show_hand
+  end
+
+  def show_result
+    if player.total > dealer.total
+      puts "It looks like #{player.name} wins!"
+    elsif player.total < dealer.total
+      puts "It looks like #{dealer.name} wins!"
+    else
+      puts "It's a tie!"
+    end
+  end
+
+  def play_again?
+    answer = nil
+    loop do
+      puts "Would you like to play again? (y/n)"
+      answer = gets.chomp.downcase
+      break if ['y', 'n'].include? answer
+      puts "Sorry, must be y or n."
+    end
+
+    answer == 'y'
+  end
+
+  def start
+    loop do
+      system 'clear'
+      deal_cards
+      show_flop
+
+      player_turn
+      if player.busted?
+        show_busted
+        break unless play_again?
+        reset
+        next
+      end
+
+      dealer_turn
+      if dealer.busted?
+        show_busted
+        break unless play_again?
+        reset
+        next
+      end
+
+      # both stayed
+      show_cards
+      show_result
+      play_again? ? reset : break
+    end
+
+    puts "Thank you for playing Twenty-One. Goodbye!"
+  end
 end
 
-Game.new.start
+game = TwentyOne.new
+game.start
