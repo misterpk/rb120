@@ -1,5 +1,3 @@
-require "byebug"
-
 class Card
   SUITS = ['H', 'D', 'S', 'C']
   FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -85,21 +83,6 @@ module Hand
 
   def total
     total = 0
-    total = calculate_total(cards, total)
-    handle_aces(cards, total)
-  end
-
-  def add_card(new_card)
-    cards << new_card
-  end
-
-  def busted?
-    total > 21
-  end
-
-  private
-
-  def calculate_total(cards, total)
     cards.each do |card|
       total += if card.ace?
                  11
@@ -109,16 +92,22 @@ module Hand
                  card.face.to_i
                end
     end
-    total
-  end
 
-  def handle_aces(cards, total)
     # correct for Aces
     cards.select(&:ace?).count.times do
       break if total <= 21
       total -= 10
     end
+
     total
+  end
+
+  def add_card(new_card)
+    cards << new_card
+  end
+
+  def busted?
+    total > 21
   end
 end
 
@@ -218,15 +207,14 @@ class TwentyOne
     end
   end
 
-  # rubocop:disable Metrics/MethodLength - code is easier to understand at
-  # this length
   def dealer_turn
     puts "#{dealer.name}'s turn..."
 
     loop do
-      break if dealer.busted?
-      if dealer.total >= 17
+      if dealer.total >= 17 && !dealer.busted?
         puts "#{dealer.name} stays!"
+        break
+      elsif dealer.busted?
         break
       else
         puts "#{dealer.name} hits!"
@@ -234,7 +222,6 @@ class TwentyOne
       end
     end
   end
-  # rubocop:enable Metrics/MethodLength
 
   def show_busted
     if player.busted?
